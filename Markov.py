@@ -6,8 +6,7 @@ from urllib import urlopen
 
 # \s == start of chain
 # \e == end of chain
-
-main_chain = {} # {string word, {int amounts, string following_word}}
+# chain = {string word, {int amounts, string following_word}}
 
 
 def get_data_from_page(url):
@@ -25,10 +24,11 @@ def calculate_probability(dictionary):
 	for i in dictionary:
 		amount += dictionary[i]
 
-	for i in dictionary:
-		dictionary[i] = float(dictionary[i]) / amount
+	copy_dictionary = dictionary.copy()
+	for i in copy_dictionary:
+		copy_dictionary[i] = float(dictionary[i]) / amount
 
-	return dictionary
+	return copy_dictionary
 
 
 def add_words(chain, string):
@@ -82,13 +82,13 @@ def print_chain(chain):
 
 def main():
 
+	main_chain = {}
+
 	urls = ["https://www.reddit.com/r/self/comments/3cudi0/resignation_thank_you/", "https://www.reddit.com/r/announcements/comments/3cucye/an_old_team_at_reddit/", "https://www.reddit.com/r/IAmA/comments/3cthh6/i_am_attorney_jeremy_glapion_and_i_sue_companies/", "https://www.reddit.com/r/explainlikeimfive/comments/3csd4b/eli5_why_are_satellites_and_the_likes_covered/", "https://www.reddit.com/r/changemyview/comments/3csnry/cmv_video_games_offer_the_greatest_potential_for/", "https://www.reddit.com/r/behindthegifs/comments/3ctpmu/two_dogs_one_mission/"]
 
 	for url in urls:
 		for entry in get_data_from_page(url):
 			add_words(main_chain, entry)
-
-	print main_chain
 
 	for i in range(0, 20):
 		print print_chain(main_chain)
