@@ -65,7 +65,6 @@ def get_random_element(dictionary):
 
 
 def print_chain(chain):
-	#print chain
 
 	current_word = '\s'
 	sentence = ''
@@ -89,10 +88,12 @@ def main():
 		for entry in get_data_from_page(url):
 			add_words(main_chain, entry)
 
-	print print_chain(main_chain)
+	print main_chain
+
+	for i in range(0, 20):
+		print print_chain(main_chain)
 
 
-#for i in range(1, 100):
 main()
 
 
