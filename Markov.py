@@ -3,19 +3,38 @@
 import random
 from bs4 import BeautifulSoup
 from urllib import urlopen
+import re, urlparse
 
 # \s == start of chain
 # \e == end of chain
 # chain = {string word, {int amounts, string following_word}}
 
+main_chain = {}
 
-def get_data_from_page(url):
-	html = urlopen(url).read()
-	soup = BeautifulSoup(html, 'html.parser')
-	entries = soup.findAll('div', {'class': 'md'})
+
+def urlEncodeNonAscii(b):
+    return re.sub('[\x80-\xFF]', lambda c: '%%%02x' % ord(c.group(0)), b)
+
+def iriToUri(iri):
+    parts= urlparse.urlparse(iri)
+    return urlparse.urlunparse(
+        part.encode('idna') if parti==1 else urlEncodeNonAscii(part.encode('utf-8'))
+        for parti, part in enumerate(parts))
+
+
+def get_data_from_page(url, html_class):
+	print url
 	results = []
-	for entry in entries:
-		results.append(str(entry.get_text().encode('ascii', 'ignore')))
+	try:
+		html = urlopen(url).read()
+		soup = BeautifulSoup(html, 'html.parser')
+		entries = soup.findAll('div', {'class': html_class})
+		for entry in entries:
+			paragraphs = entry.findAll('p')
+			for paragraph in paragraphs:
+				results.append(str(paragraph.get_text().encode('utf-8')))
+	except IOError:
+			print "Bad link: " + url
 	return results
 
 
@@ -80,18 +99,23 @@ def print_chain(chain):
 	return sentence[2:] # remove the '\s'
 
 
-def main():
+def main():	
 
-	main_chain = {}
+	urls = []
 
-	urls = ["https://www.reddit.com/r/self/comments/3cudi0/resignation_thank_you/", "https://www.reddit.com/r/announcements/comments/3cucye/an_old_team_at_reddit/", "https://www.reddit.com/r/IAmA/comments/3cthh6/i_am_attorney_jeremy_glapion_and_i_sue_companies/", "https://www.reddit.com/r/explainlikeimfive/comments/3csd4b/eli5_why_are_satellites_and_the_likes_covered/", "https://www.reddit.com/r/changemyview/comments/3csnry/cmv_video_games_offer_the_greatest_potential_for/", "https://www.reddit.com/r/behindthegifs/comments/3ctpmu/two_dogs_one_mission/"]
+	subreddit = "https://www.reddit.com/"
+	html = urlopen(subreddit).read()
+	soup = BeautifulSoup(html, 'html.parser')
+	commentUrls = soup.findAll('a', {'class': 'comments'})
+	for commentUrl in commentUrls:
+		urls.append(iriToUri(commentUrl['href']))
 
 	for url in urls:
-		for entry in get_data_from_page(url):
+		for entry in get_data_from_page(url, 'md'):
 			add_words(main_chain, entry)
 
 	for i in range(0, 20):
-		print print_chain(main_chain)
+		print print_chain(main_chain) + "\n"
 
 
 main()
